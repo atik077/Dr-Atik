@@ -1,0 +1,157 @@
+{
+  "entities": {
+    "Medicine": {
+      "title": "Medicine",
+      "description": "Represents a medicine in the inventory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "genericName": { "type": "string" },
+        "brand": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "purchasePrice": { "type": "number" },
+        "salePrice": { "type": "number" },
+        "quantity": { "type": "number" },
+        "expiryDate": { "type": "string", "format": "date" },
+        "supplierName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "category", "purchasePrice", "salePrice", "quantity", "expiryDate"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Represents a regular customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "fathersName": { "type": "string" },
+        "mobile": { "type": "string" },
+        "address": { "type": "string" },
+        "dueBalance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "mobile"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Represents a completed sales transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "dueAmount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["items", "total", "paymentMethod", "date"]
+    },
+    "Purchase": {
+      "title": "Purchase",
+      "description": "Record of medicine purchase from supplier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "medicineId": { "type": "string" },
+        "medicineName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "purchasePrice": { "type": "number" },
+        "total": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["medicineId", "quantity", "purchasePrice", "total", "date"]
+    },
+    "Transaction": {
+      "title": "Customer Transaction",
+      "description": "Record of payments or balance changes for a customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "type": { "type": "string", "enum": ["SALE", "PAYMENT"] },
+        "amount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "referenceId": { "type": "string" },
+        "note": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "type", "amount", "date"]
+    },
+    "ChiefComplaint": {
+      "title": "Chief Complaint",
+      "description": "A pre-saved chief complaint used in prescriptions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "value": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["value"]
+    },
+    "ExaminationFinding": {
+      "title": "Examination Finding",
+      "description": "A pre-saved examination finding used in prescriptions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "value": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["value"]
+    },
+    "PrescriptionDraft": {
+      "title": "Prescription Draft",
+      "description": "Saved inputs for the prescription generator",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "doctor": { "type": "object" },
+        "patient": { "type": "object" },
+        "clinical": { "type": "object" },
+        "medicines": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "medicines": {
+      "schema": "Medicine",
+      "description": "Collection of all inventory items"
+    },
+    "customers": {
+      "schema": "Customer",
+      "description": "Registered customers database"
+    },
+    "sales": {
+      "schema": "Sale",
+      "description": "Historical sales records"
+    },
+    "purchases": {
+      "schema": "Purchase",
+      "description": "Historical purchase records"
+    },
+    "transactions": {
+      "schema": "Transaction",
+      "description": "Financial ledger for customer balances"
+    },
+    "chiefComplaints": {
+      "schema": "ChiefComplaint",
+      "description": "Pre-saved chief complaints"
+    },
+    "examinationFindings": {
+      "schema": "ExaminationFinding",
+      "description": "Pre-saved examination findings"
+    },
+    "prescriptionDrafts": {
+      "schema": "PrescriptionDraft",
+      "description": "User specific prescription draft data"
+    }
+  }
+}

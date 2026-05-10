@@ -1,0 +1,141 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      // Allowing access without authentication as per user request to remove login system.
+      // Validations (isValidMedicine, etc.) still protect data integrity.
+      return true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Medicine Rules
+    match /medicines/{medicineId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidMedicine(incoming());
+      allow update: if isSignedIn() && isValidMedicine(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['quantity', 'purchasePrice', 'salePrice', 'name', 'genericName', 'brand', 'category', 'description', 'expiryDate', 'supplierName', 'updatedAt'])
+      );
+      allow delete: if isSignedIn();
+
+      function isValidMedicine(m) {
+        return m.name is string && m.name.size() > 0 && m.name.size() <= 200 &&
+               m.purchasePrice is number && m.purchasePrice >= 0 &&
+               m.salePrice is number && m.salePrice >= 0 &&
+               m.quantity is number &&
+               m.createdAt is string && m.updatedAt is string;
+      }
+    }
+
+    // Customer Rules
+    match /customers/{customerId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidCustomer(incoming());
+      allow update: if isSignedIn() && isValidCustomer(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['dueBalance', 'name', 'fathersName', 'mobile', 'address'])
+      );
+      allow delete: if isSignedIn();
+
+      function isValidCustomer(c) {
+        return c.name is string && c.name.size() > 0 &&
+               c.mobile is string && c.mobile.size() > 0 &&
+               c.dueBalance is number &&
+               c.createdAt is string;
+      }
+    }
+
+    // Sales Rules
+    match /sales/{saleId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidSale(incoming());
+      allow update, delete: if false; // Sales are immutable records
+
+      function isValidSale(s) {
+        return s.total is number && s.total >= 0 &&
+               s.paidAmount is number &&
+               s.paymentMethod is string &&
+               s.items is list && s.items.size() > 0 &&
+               s.date is string;
+      }
+    }
+
+    // Purchases Rules
+    match /purchases/{purchaseId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidPurchase(incoming());
+      allow update, delete: if false; // Purchases are immutable records
+
+      function isValidPurchase(p) {
+        return p.medicineId is string &&
+               p.quantity is number && p.quantity > 0 &&
+               p.purchasePrice is number &&
+               p.date is string;
+      }
+    }
+
+    // Transactions Rules
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidTransaction(incoming());
+      allow update, delete: if false; // Transactions are immutable records
+
+      function isValidTransaction(t) {
+        return t.customerId is string &&
+               t.type in ['SALE', 'PAYMENT'] &&
+               t.amount is number &&
+               t.date is string;
+      }
+    }
+
+    // Chief Complaints
+    match /chiefComplaints/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidComplaint(incoming());
+      allow update: if isSignedIn() && isValidComplaint(incoming());
+      allow delete: if isSignedIn();
+
+      function isValidComplaint(c) {
+        return c.value is string && c.value.size() > 0 && c.value.size() <= 1000 &&
+               c.createdAt is string;
+      }
+    }
+
+    // Examination Findings
+    match /examinationFindings/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidFinding(incoming());
+      allow update: if isSignedIn() && isValidFinding(incoming());
+      allow delete: if isSignedIn();
+
+      function isValidFinding(f) {
+        return f.value is string && f.value.size() > 0 && f.value.size() <= 1000 &&
+               f.createdAt is string;
+      }
+    }
+
+    // Prescription Drafts
+    match /prescriptionDrafts/{draftId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidDraft(incoming());
+
+      function isValidDraft(d) {
+        return d.updatedAt is string;
+      }
+    }
+  }
+}
